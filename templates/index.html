@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <title>CVE -&gt; RHSA Report Generator</title>
+        <link rel="stylesheet" type="text/css" href="static/style.css" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    </head>
+
+    <body>
+        <h1>CVE -&gt; RHSA Report Generator</h1>
+
+        <p>Enter a whitespace seperated list of CVEs in the form of CVE-YYYY-XXXX:</p>
+        <p>Currently this only supports RHSA lookups for RHEL ${rhelver}.</p>
+        <p>It may take a few moments when you click Submit!</p>
+
+        <form action="repgen" method="post">
+            <textarea name="cves" cols="20" rows="25"></textarea>
+            <br />
+            <input type="submit" value="Submit" />
+        </form>
+    </body>
+</html>

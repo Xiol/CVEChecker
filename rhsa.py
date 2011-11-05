@@ -34,6 +34,8 @@ def get_cve_info(cve):
         except urllib2.HTTPError:
             # 404 or general screwup
             return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only."
+        except urllib2.URLError:
+            return
 
         soup = BeautifulSoup(html)
 

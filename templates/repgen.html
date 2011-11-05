@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <title>CVE -> RHSA Report Generator</title>
+        <link rel="stylesheet" type="text/css" href="static/style.css" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    </head>
+
+    <body>
+        <h1>CVE -> RHSA Report Generator</h1>
+        
+        <p>This may take a few moments...</p>
+        <p>Anything marked <b>!!FIX!!</b> will need some manual checking. Ensure you do this and correct the output.</p>
+        <p>All output is used at your own risk.</p>
+        <br />
+
+        <span class="mono">
+            % for rhsa in rhsalist:
+                ${rhsa}<br />
+            % endfor
+        </span>
+        <br />
+    </body>
+</html>
