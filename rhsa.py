@@ -50,7 +50,7 @@ def get_cve_info(cve):
             statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
             return cve + " -- Red Hat Statement: "+ cveurl +": \""+ statement + "\""
         else:
-            return cve + " -- !!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either."
+            return cve + " -- !!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
 
 
 if __name__ == '__main__':
