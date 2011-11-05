@@ -33,7 +33,7 @@ def get_cve_info(cve):
             html = urllib2.urlopen(cveurl).read()
         except urllib2.HTTPError:
             # 404 or general screwup
-            return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only."
+            return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
         except urllib2.URLError:
             return
 
