@@ -14,8 +14,6 @@ tlu = TemplateLookup(directories=['templates'])
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 cherrypy.config.update({
-    'server.socket_port': 8090, 
-    'server.socket_host': '0.0.0.0',
     'tools.staticdir.root': curdir 
 })
 
