@@ -14,7 +14,8 @@ tlu = TemplateLookup(directories=['templates'])
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 cherrypy.config.update({
-    'tools.staticdir.root': curdir 
+    'tools.staticdir.root': curdir,
+    'server.environment': 'production'
 })
 
 class RHSAGenWeb:
@@ -35,6 +36,10 @@ class RHSAGenWeb:
             rhsalist.append(rhsa.get_cve_info(cve))
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
+    
+    @cherrypy.expose
+    def default(self):
+        return "404"
 
 if __name__ == "__main__":
     cherrypy.quickstart(RHSAGenWeb(), "/", "web.conf")
