@@ -28,33 +28,32 @@ CVE_BASE_URL = "https://www.redhat.com/security/data/cve/"
 RHEL_VERSION = "5"
 
 def get_cve_info(cve):
-        cveurl = CVE_BASE_URL + cve + ".html"
-        try:
-            html = urllib2.urlopen(cveurl).read()
-        except urllib2.HTTPError:
-            # 404 or general screwup
-            return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
-        except urllib2.URLError:
-            return
+    cve = cve.strip()
+    cveurl = CVE_BASE_URL + cve + ".html"
+    try:
+        html = urllib2.urlopen(cveurl).read()
+    except urllib2.HTTPError:
+        # 404 or general screwup
+        return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
+    except urllib2.URLError:
+        return
 
-        soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html)
 
-        r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
+    r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
 
-        if soup.find(text=r) is not None:
-            # If we've found the above, we have an RHSA (in theory!)
-            rhsa = soup.find(text=r).findNext('a')['href']
-            return cve + " -- Resolved: " + rhsa
-
-        elif soup.find(text="Statement"):
-            statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
-            return cve + " -- Red Hat Statement: "+ cveurl +": \""+ statement + "\""
-        else:
-            return cve + " -- !!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
+    if soup.find(text=r) is not None:
+        # If we've found the above, we have an RHSA (in theory!)
+        rhsa = soup.find(text=r).findNext('a')['href']
+        return cve + " -- Resolved: " + rhsa
+    elif soup.find(text="Statement"):
+        statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
+        return cve + " -- Red Hat Statement: "+ cveurl +": \""+ statement + "\""
+    else:
+        return cve + " -- !!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
 
 
 if __name__ == '__main__':
-
     rawdata = ""
 
     if sys.stdin.isatty():

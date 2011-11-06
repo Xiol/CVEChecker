@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # Web frontend for CVE -> RHSA report generator. 
 # 
-# Requires CherryPy, Mako, Python <= 2.7
+# Requires CherryPy, Mako, Scrubber, Python <= 2.7
 
 import rhsa 
 import cherrypy
 import os
 from mako.template import Template
 from mako.lookup import TemplateLookup
+from scrubber import Scrubber
 
 tlu = TemplateLookup(directories=['templates'])
-
+scrubber = Scrubber(autolink=True)
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 cherrypy.config.update({
@@ -25,6 +26,8 @@ class RHSAGenWeb:
 
     @cherrypy.expose
     def repgen(self, cves=None):
+        scrubber.scrub(cves)
+
         if cves == None or cves == "":
             return "You didn't give me a list of CVEs :("
 
@@ -33,7 +36,7 @@ class RHSAGenWeb:
         cves = cves.split()
 
         for cve in cves:
-            rhsalist.append(rhsa.get_cve_info(cve))
+            rhsalist.append(scrubber.scrub(rhsa.get_cve_info(cve)))
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
     
