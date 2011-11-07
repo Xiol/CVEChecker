@@ -30,8 +30,8 @@ RHEL_VERSION = "5"
 rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
 
 def get_cve_info(cve, platform='x86_64'):
-    if platform not in ['x86_64','x86']:
-        return "Platform must be 'x86_64' or 'x86'."
+    if platform not in ['x86_64','i386']:
+        return "Platform must be 'x86_64' or 'i386'."
 
     cve = cve.strip()
     cveurl = CVE_BASE_URL + cve + ".html"
