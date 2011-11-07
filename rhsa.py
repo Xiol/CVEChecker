@@ -27,7 +27,12 @@ from BeautifulSoup import BeautifulSoup
 CVE_BASE_URL = "https://www.redhat.com/security/data/cve/"
 RHEL_VERSION = "5"
 
-def get_cve_info(cve):
+rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
+
+def get_cve_info(cve, platform='x86_64'):
+    if platform not in ['x86_64','x86']:
+        return "Platform must be 'x86_64' or 'x86'."
+
     cve = cve.strip()
     cveurl = CVE_BASE_URL + cve + ".html"
     try:
@@ -40,12 +45,13 @@ def get_cve_info(cve):
 
     soup = BeautifulSoup(html)
 
-    r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
-
-    if soup.find(text=r) is not None:
+    if soup.find(text=rhsa_r) is not None:
         # If we've found the above, we have an RHSA (in theory!)
-        rhsa = soup.find(text=r).findNext('a')['href']
-        return cve + " -- Resolved: " + rhsa
+        rhsa = soup.find(text=rhsa_r).findNext('a')['href']
+        rhsa_soup = BeautifulSoup(urllib2.urlopen(rhsa).read())
+        ver = rhsa_soup.find('a',attrs={"name": "Red Hat Enterprise Linux (v. "+RHEL_VERSION+" server)"}).findNext(text="SRPMS:").findNext('td').contents[0]
+        ver = ver.replace(".src.", '.'+platform+'.')
+        return cve + " -- Resolved in version "+ver+": " + rhsa
     elif soup.find(text="Statement"):
         statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
         return cve + " -- Red Hat Statement: "+ cveurl +": \""+ statement + "\""
@@ -67,4 +73,4 @@ if __name__ == '__main__':
 
     for cve in cves:
         print get_cve_info(cve)
-        sleep(0.5) # to be nice!
+        sleep(0.3) # to be nice!
