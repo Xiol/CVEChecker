@@ -54,7 +54,7 @@ def get_cve_info(cve, platform='x86_64'):
         return cve + " -- Resolved in version "+ver+": " + rhsa
     elif soup.find(text="Statement"):
         statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
-        return cve + " -- Red Hat Statement: "+ cveurl +": \""+ statement + "\""
+        return cve + " -- Red Hat Statement: \""+ statement + "\" - " + cveurl
     else:
         return cve + " -- !!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
 
