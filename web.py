@@ -25,18 +25,21 @@ class RHSAGenWeb:
         return tlu.get_template("index.html").render(rhelver=rhsa.RHEL_VERSION)
 
     @cherrypy.expose
-    def repgen(self, cves=None):
+    def repgen(self, cves=None, platform="x86_64"):
         scrubber.scrub(cves)
 
         if cves == None or cves == "":
             return "You didn't give me a list of CVEs :("
+
+        if platform == None or platform == "":
+            return "Somehow you managed to not give me a platform. :("
 
         rhsalist = []
 
         cves = cves.split()
 
         for cve in cves:
-            rhsalist.append(scrubber.scrub(rhsa.get_cve_info(cve)))
+            rhsalist.append(scrubber.scrub(rhsa.get_cve_info(cve, platform)))
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
     

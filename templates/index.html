@@ -13,9 +13,11 @@
 
         <p>Enter a whitespace seperated list of CVEs in the form of CVE-YYYY-XXXX:</p>
         <p>Currently this only supports RHSA lookups for RHEL ${rhelver}.</p>
-        <p>It may take a few moments when you click Submit!</p>
+        <p>This can take a few moments to process as there is a slight delay between requests to the Red Hat website.</p>
 
         <form action="repgen" method="post">
+            <input type="radio" name="platform" value="x86_64" checked/>x86_64<br />
+            <input type="radio" name="platform" value="i386" />i386<br />
             <textarea name="cves" cols="20" rows="25"></textarea>
             <br />
             <input type="submit" value="Submit" />
