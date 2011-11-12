@@ -55,10 +55,8 @@ def get_cve_info(cve, platform='x86_64'):
     try:
         html = urllib2.urlopen(cveurl).read()
     except urllib2.HTTPError:
-        # 404 or general screwup
-        result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
-        _add_cve(cve, result)
-        return cve + " -- " + result
+        # 404 or general screwup, don't cache in case it turns up later
+        return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
     except urllib2.URLError:
         return
 
