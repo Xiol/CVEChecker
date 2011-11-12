@@ -33,7 +33,7 @@ rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+RHEL_VERSION+".*")
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-conn = sqlite3.connect(os.path.join(curdir, 'cache.db'))
+conn = sqlite3.connect(os.path.join(curdir, 'cache.db'), check_same_thread = False)
 cur = conn.cursor()
 
 cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, cve TEXT NOT NULL, result TEXT NOT NULL)")
