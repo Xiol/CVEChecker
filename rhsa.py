@@ -17,7 +17,6 @@
 # versions of the software you're checking the CVEs for.
 #
 # No guarantees anything this outputs is correct or proper.
-
 import sys
 import re
 import urllib2
@@ -36,7 +35,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 conn = sqlite3.connect(os.path.join(curdir, 'cache.db'), check_same_thread = False)
 cur = conn.cursor()
 
-cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, cve TEXT NOT NULL, result TEXT NOT NULL)")
+cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, platform TEXT NOT NULL, cve TEXT NOT NULL, result TEXT NOT NULL)")
 cur.execute("CREATE INDEX IF NOT EXISTS cve_idx ON cache (cve)")
 conn.commit()
 cur.close()
@@ -47,7 +46,7 @@ def get_cve_info(cve, platform='x86_64'):
 
     cve = cve.strip()
 
-    cachechk = _retr_cve(cve)
+    cachechk = _retr_cve(cve, platform)
     if cachechk is not None:
         return cachechk
 
@@ -69,27 +68,27 @@ def get_cve_info(cve, platform='x86_64'):
         ver = rhsa_soup.find('a',attrs={"name": "Red Hat Enterprise Linux (v. "+RHEL_VERSION+" server)"}).findNext(text="SRPMS:").findNext('td').contents[0]
         ver = ver.replace(".src.", '.'+platform+'.')
         result = "Resolved in version "+ver+": " + rhsa
-        _add_cve(cve, result)
+        _add_cve(cve, result, platform)
         return cve + " -- " + result
     elif soup.find(text="Statement"):
         statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
         result = "Red Hat Statement: \""+ statement + "\" - " + cveurl
-        _add_cve(cve, result)
+        _add_cve(cve, result, platform)
         return cve + " -- " + result
     else:
         result = "!!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
-        _add_cve(cve, result)
+        _add_cve(cve, result, platform)
         return cve + " -- " + result
 
-def _add_cve(cve, result):
+def _add_cve(cve, result, platform):
     cur = conn.cursor()
-    cur.execute("""INSERT INTO cache(cve, result) VALUES (?, ?)""", (cve, result,))
+    cur.execute("""INSERT INTO cache(cve, result, platform) VALUES (?, ?, ?)""", (cve, result, platform))
     conn.commit()
     cur.close()
 
-def _retr_cve(cve):
+def _retr_cve(cve, platform):
     cur = conn.cursor()
-    cur.execute("""SELECT cve,result FROM cache WHERE cve=? LIMIT 1""", (cve,))
+    cur.execute("""SELECT cve,result FROM cache WHERE cve=? AND platform=? LIMIT 1""", (cve, platform))
     result = cur.fetchone()
     cur.close()
     if result is not None:
