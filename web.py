@@ -6,6 +6,7 @@
 import rhsa 
 import cherrypy
 import os
+import re
 from mako.template import Template
 from mako.lookup import TemplateLookup
 from scrubber import Scrubber
@@ -18,6 +19,8 @@ cherrypy.config.update({
     'tools.staticdir.root': curdir,
     'server.environment': 'production'
 })
+
+fixemph = re.compile('!!FIX!!')
 
 class RHSAGenWeb:
     @cherrypy.expose
@@ -39,7 +42,9 @@ class RHSAGenWeb:
         cves = cves.split()
 
         for cve in cves:
-            rhsalist.append(scrubber.scrub(rhsa.get_cve_info(cve, platform)))
+            item = scrubber.scrub(rhsa.get_cve_info(cve, platform))
+            item = fixemph.sub('<b class="emph">!!FIX!!</b>', item)
+            rhsalist.append(item)
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
     

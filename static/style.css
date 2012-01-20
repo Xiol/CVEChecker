@@ -8,7 +8,7 @@ span.mono {
     font-size: 120%;
 }
 
-p.emph {
+.emph {
     font-style: bold;
     color: #e42217;
 }
