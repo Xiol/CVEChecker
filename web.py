@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -OO
 # Web frontend for CVE -> RHSA report generator. 
 # 
 # Requires CherryPy, Mako, Scrubber, Python <= 2.7
