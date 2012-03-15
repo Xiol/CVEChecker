@@ -75,6 +75,9 @@ def get_cve_info(cve, platform='x86_64'):
         result = "Red Hat Statement: \""+ statement + "\" - " + cveurl
         _add_cve(cve, result, platform)
         return cve + " -- " + result
+    elif soup.find(text="CVE not found"):
+        result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
+        return cve + " -- " + result
     else:
         result = "!!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
         _add_cve(cve, result, platform)
