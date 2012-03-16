@@ -2,22 +2,55 @@
 import sys
 import os
 import re
+import cPickle
+import time
 import netsnmp  # requires 'net-snmp-python' on CentOS
 
-# var = netsnmp.Varbind(SNMP_MIB)
-# res = netsnmp.snmpwalk(var, Version=1, DestHost='localhost', Community='public')
+PKG_STORE = "hosts"
 
 class SNMPQueryTool:
-    def __init__(self, host, mib="HOST-RESOURCES-MIB::hrSWInstalledName"):
+    def __init__(self, host, mib="HOST-RESOURCES-MIB::hrSWInstalledName",
+                 force_refresh=False):
         self.host = host
         self.snmp_mib = mib
         self.instpkgs = None
+        self.force_refresh = force_refresh # Don't use cache
 
-    def _get_installed_packages(self):
+        if not os.path.exists(PKG_STORE):
+            os.mkdir(PKG_STORE, 0755)
+
+        self._retr_pkgs()
+
+    def get_installed_packages(self):
         """ Get a full list of installed packages on host."""
         self.instpkgs = list(netsnmp.snmpwalk(
                                 netsnmp.Varbind(self.snmp_mib), Version=1,
                                 DestHost=self.host, Community='public'))
+        self._store_pkgs()
+
+    def _store_pkgs(self):
+        # Need to store state over requests to avoid polling SNMP too much
+        # This feels dirty.
+        if self.instpkgs:
+            with open(os.path.join(PKG_STORE, self.host), 'w') as f:
+                cPickle.dump(self.instpkgs, f, 2)
+
+    def _retr_pkgs(self):
+        pkgf = os.path.join(PKG_STORE, self.host)
+
+        if not os.path.exists(pkgf):
+            return
+
+        # If our cached package list is older than 10 minutes, remove it
+        if (time.time() - os.path.getmtime(pkgf)) > 600 or self.force_refresh:
+            print "old file detected, unlinking"
+            os.unlink(pkgf)
+            return
+        else:
+            with open(pkgf, 'r') as f:
+                print "loading cached results"
+                self.instpkgs = cPickle.load(f)
+            return
 
     def get_installed_version(self, package):
         """ Returns the full package name including version number for the
@@ -25,7 +58,7 @@ class SNMPQueryTool:
         a version number."""
 
         if self.instpkgs == None:
-            self._get_installed_packages()
+            self.get_installed_packages()
 
         p = None
 
