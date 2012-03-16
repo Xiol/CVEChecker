@@ -28,7 +28,7 @@ class RHSAGenWeb:
         return tlu.get_template("index.html").render(rhelver=rhsa.RHEL_VERSION)
 
     @cherrypy.expose
-    def repgen(self, cves=None, platform="x86_64"):
+    def repgen(self, cves=None, platform="x86_64", host=None):
         scrubber.scrub(cves)
 
         if cves == None or cves == "":
@@ -37,14 +37,18 @@ class RHSAGenWeb:
         if platform == None or platform == "":
             return "Somehow you managed to not give me a platform. :("
 
+        if host == "":
+            host = None
+
         rhsalist = []
 
         cves = cves.split()
 
         for cve in cves:
-            item = scrubber.scrub(rhsa.get_cve_info(cve, platform))
-            item = fixemph.sub('<b class="emph">!!FIX!!</b>', item)
-            rhsalist.append(item)
+            item = rhsa.get_cve_info(cve, platform, host)
+            item['cve'] = scrubber.scrub(item['cve'])
+            item['cve'] = fixemph.sub('<b class="emph">!!FIX!!</b>', item['cve'])
+            rhsalist.append(item['cve'])
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
     
@@ -53,4 +57,4 @@ class RHSAGenWeb:
         return "404"
 
 if __name__ == "__main__":
-    cherrypy.quickstart(RHSAGenWeb(), "/", "web.conf")
+    cherrypy.quickstart(RHSAGenWeb(), "/beta", "web.conf")

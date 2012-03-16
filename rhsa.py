@@ -22,6 +22,7 @@ import re
 import urllib2
 import sqlite3
 import os
+import snmp
 from time import sleep
 from BeautifulSoup import BeautifulSoup
 
@@ -40,24 +41,28 @@ cur.execute("CREATE INDEX IF NOT EXISTS cve_idx ON cache (cve)")
 conn.commit()
 cur.close()
 
-def get_cve_info(cve, platform='x86_64'):
+def get_cve_info(cve, platform='x86_64', host=None):
     if platform not in ['x86_64','i386']:
-        return "Platform must be 'x86_64' or 'i386'."
+        return { 'cve': "Platform must be 'x86_64' or 'i386'.", 'verinfo': None }
+
+    if host:
+        snmpq = snmp.SNMPQueryTool(host)
+        snmpq.get_installed_packages()
 
     cve = cve.strip()
 
-    cachechk = _retr_cve(cve, platform)
-    if cachechk is not None:
-        return cachechk
+    #cachechk = _retr_cve(cve, platform)
+    #if cachechk is not None:
+    #    return cachechk
 
     cveurl = CVE_BASE_URL + cve + ".html"
     try:
         html = urllib2.urlopen(cveurl).read()
     except urllib2.HTTPError:
         # 404 or general screwup, don't cache in case it turns up later
-        return cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
+        return { 'cve': cve + " -- !!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference.", 'verinfo': None }
     except urllib2.URLError:
-        return
+        return { 'cve': "There was a problem with the URL.", 'verinfo': None }
 
     soup = BeautifulSoup(html)
 
@@ -69,20 +74,20 @@ def get_cve_info(cve, platform='x86_64'):
         ver = ver.replace(".src.", '.'+platform+'.')
         result = "Resolved in version "+ver+": " + rhsa
         _add_cve(cve, result, platform)
-        return cve + " -- " + result
+        return { 'cve': cve + " -- " + result, 'verinfo': None }
     elif soup.find(text="Statement"):
         statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
         result = "Red Hat Statement: \""+ statement + "\" - " + cveurl
         _add_cve(cve, result, platform)
-        return cve + " -- " + result
+        return { 'cve': cve + " -- " + result, 'verinfo': None }
     elif soup.find(text="CVE not found"):
         # They changed their website! This is needed to pick up the lack of a CVE now.
         result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
-        return cve + " -- " + result
+        return { 'cve': cve + " -- " + result, 'verinfo': None }
     else:
         result = "!!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
         #_add_cve(cve, result, platform)
-        return cve + " -- " + result
+        return { 'cve': cve + " -- " + result, 'verinfo': None }
 
 def _add_cve(cve, result, platform):
     cur = conn.cursor()
@@ -112,4 +117,4 @@ if __name__ == '__main__':
     cves = rawdata.split()
 
     for cve in cves:
-        print get_cve_info(cve)
+        print get_cve_info(cve)['cve']
