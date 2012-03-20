@@ -6,6 +6,7 @@ This script and (optional, poorly thought out) web interface will check Red Hat'
 To use, pipe in a whitespace separated list of CVE references in one of the following forms (for example):
 
    `python rhsa.py < cvelist.txt`
+
    `echo "CVE-2001-1002 CVE-2004-4002" | python rhsa.py`
 
 Alternatively launch the web interface with `python web.py`.
