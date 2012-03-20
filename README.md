@@ -13,14 +13,14 @@ Alternatively launch the web interface with `python web.py`.
 
 Requires:
 
-    * Python >= 2.3 (tested with Python 2.6, CentOS 6)
-    * BeautifulSoup
-    * SNMP Python libraries (net-snmp-python on CentOS/RHEL)
+* Python >= 2.3 (tested with Python 2.6, CentOS 6)
+* BeautifulSoup
+* SNMP Python libraries (net-snmp-python on CentOS/RHEL)
     
 Additionally, for the optional web interface:
     
-    * Mako
-    * Scrubber
-    * CherryPy
+* Mako
+* Scrubber
+* CherryPy
 
 Currently working on SNMP integration to query remote servers for version information using SNMPv1 (...yeah, I know). 
