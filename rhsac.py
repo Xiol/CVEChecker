@@ -1,5 +1,24 @@
 #!/usr/bin/env python -OO
-# Rewrite of CVE -> RHSA Report Generator using a class.
+# CVE -> RHSA Report Generator
+#
+# Requires Beautiful Soup: http://www.crummy.com/software/BeautifulSoup/
+# Currently only tested with Python 2.6, but no reason it shouldn't work
+# with older Python versions (minimum 2.3). Not compatible with Python 3.
+#
+# Use like: ./rhsa.py < cvelist.txt, where cvelist.txt is a whitespace
+# separated list of CVE numbers in the format CVE-YYYY-XXXX.
+#
+# This will find the CVE on the CVE_BASE_URL site and scrape for the
+# related RHSA. If it can't find the CVE, chances are it doesn't affect
+# Red Hat or Linux. If it can't find an RHSA, then it'll be something
+# they don't intend to fix, so output the statement from Red Hat. 
+# Otherwise, consider resolved and output the link to the RHSA.
+# This of course assumes you ARE running the latest CentOS/RHEL release 
+# versions of the software you're checking the CVEs for.
+#
+# No guarantees anything this outputs is correct or proper.
+#
+# vim:ts=4:sw=4:sts=4:ai:si:nu
 
 import sys, re, urllib2, sqlite3, os, snmp
 from time import sleep
