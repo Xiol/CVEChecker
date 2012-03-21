@@ -3,7 +3,7 @@
 # 
 # Requires CherryPy, Mako, Scrubber, Python <= 2.7
 
-import rhsa 
+import rhsac
 import cherrypy
 import os
 import re
@@ -25,7 +25,7 @@ fixemph = re.compile('!!FIX!!')
 class RHSAGenWeb:
     @cherrypy.expose
     def index(self):
-        return tlu.get_template("index.html").render(rhelver=rhsa.RHEL_VERSION)
+        return tlu.get_template("index.html").render(rhelver="5")
 
     @cherrypy.expose
     def repgen(self, cves=None, platform="x86_64", host=None):
@@ -40,18 +40,20 @@ class RHSAGenWeb:
         if host == "":
             host = None
 
+        checker = rhsac.CVEChecker()
+
         rhsalist = []
 
         cves = cves.split()
 
         for cve in cves:
-            item = rhsa.get_cve_info(cve, platform, host)
+            item = checker.get_cve_info(cve, platform, host)
             item['cve'] = scrubber.scrub(item['cve'])
             item['cve'] = fixemph.sub('<b class="emph">!!FIX!!</b>', item['cve'])
             rhsalist.append(item['cve'])
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
-    
+ 
     @cherrypy.expose
     def default(self):
         return "404"
