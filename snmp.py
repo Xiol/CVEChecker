@@ -66,13 +66,9 @@ class SNMPQueryTool:
         # we're looking once. Once found, stop searching and return it
         for p in (pkg for pkg in self.instpkgs if pkg.find(package) == 0):
             break
-        
-        return p
 
+        return p
 
 if __name__ == "__main__":
     q = SNMPQueryTool('localhost')
-    print q.get_installed_version('glibc')
-
-    #    print "What you doin', bruv?"
-    #    sys.exit(1)
+    q.get_installed_version(raw_input("Package to query: "))
