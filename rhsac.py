@@ -8,7 +8,7 @@
 # Use like: ./rhsa.py < cvelist.txt, where cvelist.txt is a whitespace
 # separated list of CVE numbers in the format CVE-YYYY-XXXX.
 #
-# This will find the CVE on the CVE_BASE_URL site and scrape for the
+# This will find the CVE on the cve_base_url site and scrape for the
 # related RHSA. If it can't find the CVE, chances are it doesn't affect
 # Red Hat or Linux. If it can't find an RHSA, then it'll be something
 # they don't intend to fix, so output the statement from Red Hat. 
@@ -26,9 +26,10 @@ from BeautifulSoup import BeautifulSoup
 
 class CVEChecker:
     def __init__(self):
-        self.CVE_BASE_URL = "https://www.redhat.com/security/data/cve/"
-        self.RHEL_VERSION = "5"
-        self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+self.RHEL_VERSION+".*")
+        self.cve_base_url = "https://www.redhat.com/security/data/cve/"
+        self.rhel_version = "5"
+        self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+self.rhel_version+".*")
+        self.pkghdr = "Red Hat Enterprise Linux (v. "+self.rhel_version+" server)"
         self.curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
         initdb = False
@@ -42,7 +43,9 @@ class CVEChecker:
 
     def _init_db(self):
         cur = self.conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, platform TEXT NOT NULL, cve TEXT NOT NULL, result TEXT NOT NULL)")
+        cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    +"timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, platform TEXT NOT NULL, " \
+                    +"cve TEXT NOT NULL, result TEXT NOT NULL)")
         cur.execute("CREATE INDEX IF NOT EXISTS cve_idx ON cache (cve)")
         self.conn.commit()
         cur.close()
@@ -66,7 +69,7 @@ class CVEChecker:
                 # XXX: Do what? We can't cache the snmp results (in theory) so re-run?
                 pass
 
-        cveurl = self.CVE_BASE_URL + cve + ".html" # Not sure if we need .html anymore? They rewrite it anyway.
+        cveurl = self.cve_base_url + cve + ".html" # Not sure if we need .html anymore? They rewrite it anyway.
         try:
             html = urllib2.urlopen(cveurl).read()
         except urllib2.HTTPError:
@@ -85,7 +88,7 @@ class CVEChecker:
             # Open that page, read it in, hand it off to BS
             rhsa_soup = BeautifulSoup(urllib2.urlopen(rhsa).read())
             # Get the package version where the issue is fixed (SRPMS link)
-            ver = rhsa_soup.find('a',attrs={"name": "Red Hat Enterprise Linux (v. "+self.RHEL_VERSION+" server)"}).findNext(text="SRPMS:").findNext('td').contents[0]
+            ver = rhsa_soup.find('a',attrs={"name": self.pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
             # Change the 'src' in the package name to our platform name
             # This is being very lazy, but it works - the versions are the same
             # for i386 and x86_64, so we can get away with this for now.
@@ -112,7 +115,7 @@ class CVEChecker:
             result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
             return { 'cve': cve + " -- " + result, 'verinfo': None }
         else:
-            result = "!!FIX!! No RHSA for version "+RHEL_VERSION+", no statement either. See: " + cveurl
+            result = "!!FIX!! No RHSA for version "+self.rhel_version+", no statement either. See: " + cveurl
             #_add_cve(cve, result, platform)
             return { 'cve': cve + " -- " + result, 'verinfo': None }
 
