@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-import sys
-import os
-import re
-import cPickle
-import time
-import netsnmp  # requires 'net-snmp-python' on CentOS
+# netsnmp requires net-snmp-python on CentOS / RHEL
+import sys, os, re, cPickle, time, netsnmp, difflib
 
 PKG_STORE = "hosts"
 
@@ -15,17 +11,27 @@ class SNMPQueryTool:
         self.snmp_mib = mib
         self.instpkgs = None
         self.force_refresh = force_refresh # Don't use cache
+        self.debug = False
 
         if not os.path.exists(PKG_STORE):
             os.mkdir(PKG_STORE, 0755)
 
         self._retr_pkgs()
 
-    def get_installed_packages(self):
+    def get_packages(self):
         """ Get a full list of installed packages on host."""
-        self.instpkgs = list(netsnmp.snmpwalk(
-                                netsnmp.Varbind(self.snmp_mib), Version=1,
-                                DestHost=self.host, Community='public'))
+        self._debug("SNMP: Performing SNMP query...")
+        try:
+            self.instpkgs = list(netsnmp.snmpwalk(
+                                    netsnmp.Varbind(self.snmp_mib), Version=1,
+                                    DestHost=self.host, Community='public'))
+
+            if self.instpkgs == []:
+                self.instpkgs = None
+        except:
+            self.instpkgs = None
+            return
+
         self._store_pkgs()
 
     def _store_pkgs(self):
@@ -43,32 +49,38 @@ class SNMPQueryTool:
 
         # If our cached package list is older than 10 minutes, remove it
         if (time.time() - os.path.getmtime(pkgf)) > 600 or self.force_refresh:
-            print "old file detected, unlinking"
+            self._debug("SNMP: Old SNMP results found, unlinking.")
             os.unlink(pkgf)
             return
         else:
             with open(pkgf, 'r') as f:
-                print "loading cached results"
+                self._debug("SNMP: Loading cached SNMP results.")
                 self.instpkgs = cPickle.load(f)
+                self._debug("SNMP: Load complete.")
             return
 
-    def get_installed_version(self, package):
-        """ Returns the full package name including version number for the
-        package requested. 'package' should be the package name without 
-        a version number."""
+    def get_installed_package(self, package):
+        # Uses difflib to perform a fuzzy match to return the installed package
+        # 'package' should be a full RPM package name including version
+        # Returns the best match, which will be at index 0
+        if self.instpkgs is None:
+            self.get_packages()
 
-        if self.instpkgs == None:
-            self.get_installed_packages()
+        if self.instpkgs is None:
+            # If it's still none, SNMP failed.
+            return "SNMP query problem."
 
-        p = None
+        pkg = difflib.get_close_matches(package, self.instpkgs)[0]
 
-        # Loop over the list of installed packages and find the one
-        # we're looking once. Once found, stop searching and return it
-        for p in (pkg for pkg in self.instpkgs if pkg.find(package) == 0):
-            break
+        if pkg:
+            return pkg
+        else:
+            return None
 
-        return p
+    def _debug(self, msg):
+        if self.debug:
+            print msg
 
 if __name__ == "__main__":
     q = SNMPQueryTool('localhost')
-    q.get_installed_version(raw_input("Package to query: "))
+    q.get_installed_package(raw_input("Package to query: "))
