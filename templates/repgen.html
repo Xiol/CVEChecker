@@ -18,7 +18,11 @@
 
         <span class="mono">
             % for rhsa in rhsalist:
-                ${rhsa}<br />
+                % if rhsa['verinfo']:
+                    ${rhsa['cve']} -- Package installed on server: ${rhsa['verinfo']}<br />
+                % else:
+                    ${rhsa['cve']}<br />
+                % endif
             % endfor
         </span>
         <br />

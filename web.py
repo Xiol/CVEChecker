@@ -50,10 +50,10 @@ class RHSAGenWeb:
             item = checker.get_cve_info(cve, platform, host)
             item['cve'] = scrubber.scrub(item['cve'])
             item['cve'] = fixemph.sub('<b class="emph">!!FIX!!</b>', item['cve'])
-            rhsalist.append(item['cve'])
+            rhsalist.append(item)
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
- 
+
     @cherrypy.expose
     def default(self):
         return "404"
