@@ -64,12 +64,10 @@ class CVEChecker:
         cached_cve = self._cache_retrieve(cve, platform)
         if cached_cve['cve'] is not None:
             if host:
-                if cached_cve['verinfo']:
-                    return { 'cve': cached_cve['cve'], 'verinfo': self._get_installed_package(cached_cve['verinfo']) }
-                else:
-                    return cached_cve # Likely a statement, so no verinfo despite wanting us to check a host
-            else:
-                return cached_cve
+                if cached_cve['originalver']:
+                    return { 'cve': cached_cve['cve'], 'verinfo': self._get_installed_package(cached_cve['originalver']) }
+            # Likely a statement, so no verinfo despite wanting us to check a host
+            return { 'cve': cached_cve['cve'], 'verinfo': cached_cve['originalver'] }
 
         cveurl = self.cve_base_url + cve + ".html" # Not sure if we need .html anymore? They rewrite it anyway.
         try:
@@ -149,11 +147,13 @@ class CVEChecker:
         if result is not None:
             result = ' -- '.join([t for t in result if t is not None])
 
-        return { 'cve': result, 'verinfo': o_ver }
+        return { 'cve': result, 'originalver': o_ver }
 
     def _cache_store(self, cve, result, platform, o_ver=None):
         cur = self.conn.cursor()
         if o_ver:
+            # We'll store the version that the issue is fixed in separately so we can do
+            # a lookup on it easily later when this information is retrieved from the cache
             cur.execute("""INSERT INTO cache(cve, result, platform, o_ver) VALUES (?, ?, ?, ?)""", \
                            (cve, result, platform, o_ver))
         else:
@@ -191,6 +191,7 @@ if __name__ == '__main__':
 
     for cve in cves:
         info = checker.get_cve_info(cve, host='94.229.165.60')
+        print info
         if info['verinfo'] is not None:
             print info['cve'] + " -- Currently installed package: " + info['verinfo']
         else:
