@@ -19,7 +19,12 @@
 #
 # vim:ts=4:sw=4:sts=4:ai:si:nu
 
-import sys, re, urllib2, sqlite3, os, difflib
+import sys
+if not sys.version_info[:2] <= (2,6):
+    print "I require Python 2.6 or 2.7 to run."
+    sys.exit(1)
+
+import re, urllib2, sqlite3, os, difflib
 import snmp
 from time import sleep
 from BeautifulSoup import BeautifulSoup
