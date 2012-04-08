@@ -13,7 +13,7 @@ Alternatively launch the web interface with `python web.py`.
 
 Requires:
 
-* Python >= 2.3 (tested with Python 2.6, CentOS 6)
+* Python >= 2.6 (tested with Python 2.6, CentOS 6)
 * BeautifulSoup
 * SNMP Python libraries (net-snmp-python on CentOS/RHEL)
     
