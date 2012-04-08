@@ -69,7 +69,9 @@ class SNMPQueryTool:
         if self.instpkgs is None:
             # If it's still none, SNMP failed.
             return "SNMP query problem."
-
+        
+        possibles = difflib.get_close_matches(package, self.instpkgs)
+        print possibles
         pkg = difflib.get_close_matches(package, self.instpkgs)[0]
 
         if pkg:
