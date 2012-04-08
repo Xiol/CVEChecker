@@ -30,6 +30,7 @@ class CVEChecker:
         self.cve_base_url = "https://www.redhat.com/security/data/cve/"
         self.rhel_version = "5"
         self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+self.rhel_version+".*")
+        self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
         self.pkghdr = "Red Hat Enterprise Linux (v. "+self.rhel_version+" server)"
         self.curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
         self.snmpq = None
@@ -60,6 +61,12 @@ class CVEChecker:
            self.snmpq = snmp.SNMPQueryTool(host)
 
         cve = cve.strip()
+
+        cve = cve.upper()
+
+        if not self.cve_r.match(cve):
+            # Check the CVE is in the correct format
+            return {'cve': cve + " -- This is not a CVE reference.", 'verinfo': None }
 
         cached_cve = self._cache_retrieve(cve, platform)
         if cached_cve['cve'] is not None:
