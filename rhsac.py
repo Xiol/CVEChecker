@@ -1,9 +1,8 @@
 #!/usr/bin/env python -OO
 # CVE -> RHSA Report Generator
 #
-# Requires Beautiful Soup: http://www.crummy.com/software/BeautifulSoup/
-# Currently only tested with Python 2.6, but no reason it shouldn't work
-# with older Python versions (minimum 2.3). Not compatible with Python 3.
+# Requires Python 2.6 and Beautiful Soup: 
+#    http://www.crummy.com/software/BeautifulSoup/
 #
 # Use like: ./rhsa.py < cvelist.txt, where cvelist.txt is a whitespace
 # separated list of CVE numbers in the format CVE-YYYY-XXXX.
@@ -66,7 +65,7 @@ class CVEChecker:
 
         if not self.cve_r.match(cve):
             # Check the CVE is in the correct format
-            return {'cve': cve + " -- This is not a CVE reference.", 'verinfo': None }
+            return {'cve': "{0} -- This is not a CVE reference.".format(cve), 'verinfo': None }
 
         cached_cve = self._cache_retrieve(cve, platform)
         if cached_cve['cve'] is not None:
@@ -81,8 +80,8 @@ class CVEChecker:
             html = urllib2.urlopen(cveurl).read()
         except urllib2.HTTPError:
             # 404 or general screwup, don't cache in case it turns up later
-            return { 'cve': cve + " -- !!FIX!! Not found on Red Hat's website. " \
-                                  +"Google it, might be Windows only or bad CVE reference.", 'verinfo': None }
+            return { 'cve': "{0} -- !!FIX!! Not found on Red Hat's website. " \
+                                  +"Google it, might be Windows only or bad CVE reference.".format(cve), 'verinfo': None }
         except urllib2.URLError:
             return { 'cve': "There was a problem with the URL.", 'verinfo': None }
 
@@ -105,7 +104,7 @@ class CVEChecker:
             ver = o_ver.replace(".src.", '.'+platform+'.')
 
             # Construct our result text
-            result = "Resolved in version "+ver+": " + rhsa
+            result = "Resolved in version {0}: {1}".format(ver, rhsa)
 
             # Get currently installed package on our SNMP queried host, if any. 
             instver = None
@@ -116,14 +115,14 @@ class CVEChecker:
             self._cache_store(cve, result, platform, o_ver)
 
             # Return our dictionary containing the CVE result and the SNMP info (if any)
-            return { 'cve': cve + " -- " + result, 'verinfo': instver }
+            return { 'cve': "{0} -- {1}".format(cve, result), 'verinfo': instver }
 
         elif soup.find(text="Statement"):
             # If we're here, Red Hat haven't released an updated package, but they
             # have made a statement about the issue, usually pointing out why they
             # haven't fixed it. We need to grab this for our report...
             statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
-            result = "Red Hat Statement: \""+ statement + "\" - " + cveurl
+            result = "Red Hat Statement: \"{0}\" - {1}".format(statement, cveurl)
             self._cache_store(cve, result, platform)
             return { 'cve': cve + " -- " + result, 'verinfo': None }
 
@@ -134,7 +133,7 @@ class CVEChecker:
             return { 'cve': cve + " -- " + result, 'verinfo': None }
 
         else:
-            result = "!!FIX!! No RHSA for version "+self.rhel_version+", no statement either. See: " + cveurl
+            result = "!!FIX!! No RHSA for version {0}, no statement either. See {1}".format(self.rhel_version, cveurl)
             #_add_cve(cve, result, platform)
             return { 'cve': cve + " -- " + result, 'verinfo': None }
 
@@ -200,6 +199,6 @@ if __name__ == '__main__':
         info = checker.get_cve_info(cve, host='94.229.165.60')
         print info
         if info['verinfo'] is not None:
-            print info['cve'] + " -- Currently installed package: " + info['verinfo']
+            print "{0} -- Currently installed package: {1}".format(info['cve'], info['verinfo'])
         else:
             print info['cve']
