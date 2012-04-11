@@ -1,7 +1,7 @@
 #!/usr/bin/env python -OO
 # CVE -> RHSA Report Generator
 #
-# Requires Python 2.6 and Beautiful Soup: 
+# Requires Python 2.6 and Beautiful Soup:
 #    http://www.crummy.com/software/BeautifulSoup/
 #
 # Use like: ./rhsa.py < cvelist.txt, where cvelist.txt is a whitespace
@@ -10,9 +10,9 @@
 # This will find the CVE on the cve_base_url site and scrape for the
 # related RHSA. If it can't find the CVE, chances are it doesn't affect
 # Red Hat or Linux. If it can't find an RHSA, then it'll be something
-# they don't intend to fix, so output the statement from Red Hat. 
+# they don't intend to fix, so output the statement from Red Hat.
 # Otherwise, consider resolved and output the link to the RHSA.
-# This of course assumes you ARE running the latest CentOS/RHEL release 
+# This of course assumes you ARE running the latest CentOS/RHEL release
 # versions of the software you're checking the CVEs for.
 #
 # No guarantees anything this outputs is correct or proper.
@@ -20,22 +20,25 @@
 # vim:ts=4:sw=4:sts=4:ai:si:nu
 
 import sys
-if not sys.version_info[:2] <= (2,6):
+if not sys.version_info[:2] <= (2, 6):
     print "I require Python 2.6 or 2.7 to run."
     sys.exit(1)
 
-import re, urllib2, sqlite3, os, difflib
+import re
+import urllib2
+import sqlite3
+import os
 import snmp
-from time import sleep
 from BeautifulSoup import BeautifulSoup
+
 
 class CVEChecker:
     def __init__(self):
         self.cve_base_url = "https://www.redhat.com/security/data/cve/"
         self.rhel_version = "5"
-        self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version "+self.rhel_version+".*")
+        self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version {0}.*".format(self.rhel_version))
         self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
-        self.pkghdr = "Red Hat Enterprise Linux (v. "+self.rhel_version+" server)"
+        self.pkghdr = "Red Hat Enterprise Linux (v. {0} server)".format(self.rhel_version)
         self.curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
         self.snmpq = None
 
@@ -43,7 +46,7 @@ class CVEChecker:
         if not os.path.exists(os.path.join(self.curdir, 'cache.db')):
             initdb = True
 
-        self.conn = sqlite3.connect(os.path.join(self.curdir, 'cache.db'), check_same_thread = False)
+        self.conn = sqlite3.connect(os.path.join(self.curdir, 'cache.db'), check_same_thread=False)
 
         if initdb:
             self._init_db()
@@ -51,18 +54,18 @@ class CVEChecker:
     def _init_db(self):
         cur = self.conn.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                    +"timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, platform TEXT NOT NULL, " \
-                    +"cve TEXT NOT NULL, result TEXT NOT NULL, o_ver TEXT DEFAULT NULL)")
+                    + "timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, platform TEXT NOT NULL, " \
+                    + "cve TEXT NOT NULL, result TEXT NOT NULL, o_ver TEXT DEFAULT NULL)")
         cur.execute("CREATE INDEX IF NOT EXISTS cve_idx ON cache (cve)")
         self.conn.commit()
         cur.close()
 
     def get_cve_info(self, cve, platform="x86_64", host=None):
-        if platform not in ['x86_64','i386']:
-            return { 'cve': "Platform must be 'x86_64' or 'i386'.", 'verinfo': None }
+        if platform not in ['x86_64', 'i386']:
+            return {'cve': "Platform must be 'x86_64' or 'i386'.", 'verinfo': None}
 
         if host:
-           self.snmpq = snmp.SNMPQueryTool(host)
+            self.snmpq = snmp.SNMPQueryTool(host)
 
         cve = cve.strip()
 
@@ -70,25 +73,25 @@ class CVEChecker:
 
         if not self.cve_r.match(cve):
             # Check the CVE is in the correct format
-            return {'cve': "{0} -- This is not a CVE reference.".format(cve), 'verinfo': None }
+            return {'cve': "{0} -- This is not a CVE reference.".format(cve), 'verinfo': None}
 
         cached_cve = self._cache_retrieve(cve, platform)
         if cached_cve['cve'] is not None:
             if host:
                 if cached_cve['originalver']:
-                    return { 'cve': cached_cve['cve'], 'verinfo': self._get_installed_package(cached_cve['originalver']) }
+                    return {'cve': cached_cve['cve'], 'verinfo': self._get_installed_package(cached_cve['originalver'])}
             # Likely a statement, so no verinfo despite wanting us to check a host
-            return { 'cve': cached_cve['cve'], 'verinfo': cached_cve['originalver'] }
+            return {'cve': cached_cve['cve'], 'verinfo': cached_cve['originalver']}
 
-        cveurl = self.cve_base_url + cve + ".html" # Not sure if we need .html anymore? They rewrite it anyway.
+        cveurl = self.cve_base_url + cve + ".html"  # Not sure if we need .html anymore? They rewrite it anyway.
         try:
             html = urllib2.urlopen(cveurl).read()
         except urllib2.HTTPError:
             # 404 or general screwup, don't cache in case it turns up later
-            return { 'cve': "{0} -- !!FIX!! Not found on Red Hat's website. " \
-                                  +"Google it, might be Windows only or bad CVE reference.".format(cve), 'verinfo': None }
+            return {'cve': "{0} -- !!FIX!! Not found on Red Hat's website. " \
+                                  + "Google it, might be Windows only or bad CVE reference.".format(cve), 'verinfo': None}
         except urllib2.URLError:
-            return { 'cve': "There was a problem with the URL.", 'verinfo': None }
+            return {'cve': "There was a problem with the URL.", 'verinfo': None}
 
         soup = BeautifulSoup(html)
 
@@ -101,17 +104,17 @@ class CVEChecker:
             rhsa_soup = BeautifulSoup(urllib2.urlopen(rhsa).read())
 
             # Get the package version where the issue is fixed (SRPMS link)
-            o_ver = rhsa_soup.find('a',attrs={"name": self.pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
+            o_ver = rhsa_soup.find('a', attrs={"name": self.pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
 
             # Change the 'src' in the package name to our platform name
             # This is being very lazy, but it works - the versions are the same
             # for i386 and x86_64, so we can get away with this for now.
-            ver = o_ver.replace(".src.", '.'+platform+'.')
+            ver = o_ver.replace(".src.", '.{0}.'.format(platform))
 
             # Construct our result text
             result = "Resolved in version {0}: {1}".format(ver, rhsa)
 
-            # Get currently installed package on our SNMP queried host, if any. 
+            # Get currently installed package on our SNMP queried host, if any.
             instver = None
             if host:
                 instver = self._get_installed_package(o_ver)
@@ -120,7 +123,7 @@ class CVEChecker:
             self._cache_store(cve, result, platform, o_ver)
 
             # Return our dictionary containing the CVE result and the SNMP info (if any)
-            return { 'cve': "{0} -- {1}".format(cve, result), 'verinfo': instver }
+            return {'cve': "{0} -- {1}".format(cve, result), 'verinfo': instver}
 
         elif soup.find(text="Statement"):
             # If we're here, Red Hat haven't released an updated package, but they
@@ -129,18 +132,18 @@ class CVEChecker:
             statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
             result = "Red Hat Statement: \"{0}\" - {1}".format(statement, cveurl)
             self._cache_store(cve, result, platform)
-            return { 'cve': cve + " -- " + result, 'verinfo': None }
+            return {'cve': cve + " -- " + result, 'verinfo': None}
 
         elif soup.find(text="CVE not found"):
             # They changed their website! This is needed to pick up the lack of a CVE now,
             # since they don't 404 on a missing CVE, they redirect to a page that returns 200 OK. Boo.
             result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
-            return { 'cve': cve + " -- " + result, 'verinfo': None }
+            return {'cve': cve + " -- " + result, 'verinfo': None}
 
         else:
             result = "!!FIX!! No RHSA for version {0}, no statement either. See {1}".format(self.rhel_version, cveurl)
             #_add_cve(cve, result, platform)
-            return { 'cve': cve + " -- " + result, 'verinfo': None }
+            return {'cve': cve + " -- " + result, 'verinfo': None}
 
     def _get_installed_package(self, package):
         p = package.split('src')[0][:-1]
@@ -158,7 +161,7 @@ class CVEChecker:
         if result is not None:
             result = ' -- '.join([t for t in result if t is not None])
 
-        return { 'cve': result, 'originalver': o_ver }
+        return {'cve': result, 'originalver': o_ver}
 
     def _cache_store(self, cve, result, platform, o_ver=None):
         cur = self.conn.cursor()

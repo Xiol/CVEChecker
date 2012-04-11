@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # netsnmp requires net-snmp-python on CentOS / RHEL
-import sys, os, re, cPickle, time, netsnmp, difflib
+import os
+import cPickle
+import time
+import netsnmp
+import difflib
 
 PKG_STORE = "hosts"
+
 
 class SNMPQueryTool:
     def __init__(self, host, mib="HOST-RESOURCES-MIB::hrSWInstalledName",
@@ -10,7 +15,7 @@ class SNMPQueryTool:
         self.host = host
         self.snmp_mib = mib
         self.instpkgs = None
-        self.force_refresh = force_refresh # Don't use cache
+        self.force_refresh = force_refresh  # Don't use cache
         self.debug = False
 
         if not os.path.exists(PKG_STORE):
@@ -69,7 +74,7 @@ class SNMPQueryTool:
         if self.instpkgs is None:
             # If it's still none, SNMP failed.
             return "SNMP query problem."
-        
+
         possibles = difflib.get_close_matches(package, self.instpkgs)
         print possibles
         pkg = difflib.get_close_matches(package, self.instpkgs)[0]
