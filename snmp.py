@@ -65,9 +65,6 @@ class SNMPQueryTool:
             return
 
     def get_installed_package(self, package):
-        # Uses difflib to perform a fuzzy match to return the installed package
-        # 'package' should be a full RPM package name including version
-        # Returns the best match, which will be at index 0
         if self.instpkgs is None:
             self.get_packages()
 
@@ -75,12 +72,38 @@ class SNMPQueryTool:
             # If it's still none, SNMP failed.
             return "SNMP query problem."
 
-        possibles = difflib.get_close_matches(package, self.instpkgs)
-        print possibles
-        pkg = difflib.get_close_matches(package, self.instpkgs)[0]
+        # Use difflib.SequenceMatcher() to figure out the package name.
+        # Why all this BS? Well, RPM package names aren't consistent, and
+        # the rpm python tools will only work against installed packages
+        # on THIS system, which won't do. This is going to be slow.
 
-        if pkg:
-            return pkg
+        # First we need to narrow down the possible candidates.
+        pkg_start = package.split('-')[0]
+        potentials = []
+        for p in self.instpkgs:
+            if p.find(pkg_start) == 0:
+                potentials.append(p)
+
+        # Then we'll use a SequenceMatcher to check those potentials,
+        # assuming we have some...
+        if potentials == []:
+            self._debug("No potentials found.")
+            return None
+
+        sm = difflib.SequenceMatcher()
+        sm.set_seq2(package)
+        hr = {'package': None, 'ratio': 0}
+        for p in potentials:
+            sm.set_seq1(p)
+            r = sm.quick_ratio()
+            if r > hr['ratio']:
+                hr['ratio'] = r
+                hr['package'] = p
+
+        self._debug("Match found, package: {0}, ratio: {0}".format(hr['ratio'], hr['package']))
+
+        if hr['package']:
+            return hr['package']
         else:
             return None
 

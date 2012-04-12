@@ -204,8 +204,7 @@ if __name__ == '__main__':
     checker = CVEChecker()
 
     for cve in cves:
-        info = checker.get_cve_info(cve, host='94.229.165.60')
-        print info
+        info = checker.get_cve_info(cve, host='localhost')
         if info['verinfo'] is not None:
             print "{0} -- Currently installed package: {1}".format(info['cve'], info['verinfo'])
         else:
