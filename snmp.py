@@ -59,9 +59,7 @@ class SNMPQueryTool:
             return
         else:
             with open(pkgf, 'r') as f:
-                self._debug("SNMP: Loading cached SNMP results.")
                 self.instpkgs = cPickle.load(f)
-                self._debug("SNMP: Load complete.")
             return
 
     def get_installed_package(self, package):
@@ -100,11 +98,12 @@ class SNMPQueryTool:
                 hr['ratio'] = r
                 hr['package'] = p
 
-        self._debug("Match found, package: {0}, ratio: {0}".format(hr['ratio'], hr['package']))
 
         if hr['package']:
+            self._debug("SNMP: Match found, package: {0}; ratio: {1}".format(hr['package'], hr['ratio']))
             return hr['package']
         else:
+            self._debug("SNMP: No matches found, package: {0}; potentials: {1}".format(pkg_start, potentials))
             return None
 
     def _debug(self, msg):
