@@ -1,6 +1,10 @@
 #!/usr/bin/env python -OO
-# Web frontend for CVE -> RHSA report generator. 
-# 
+# This Source Code Form is subject to the terms of the Mozilla
+# Public License, v. 2.0. If a copy of the MPL was not distributed
+# with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Web frontend for CVE -> RHSA report generator.
+#
 # Requires CherryPy, Mako, Scrubber, Python <= 2.7
 
 import rhsac

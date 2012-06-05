@@ -1,4 +1,8 @@
 #!/usr/bin/env python -OO
+# This Source Code Form is subject to the terms of the Mozilla
+# Public License, v. 2.0. If a copy of the MPL was not distributed
+# with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
 # CVE -> RHSA Report Generator
 #
 # Requires Beautiful Soup: http://www.crummy.com/software/BeautifulSoup/
@@ -11,9 +15,9 @@
 # This will find the CVE on the CVE_BASE_URL site and scrape for the
 # related RHSA. If it can't find the CVE, chances are it doesn't affect
 # Red Hat or Linux. If it can't find an RHSA, then it'll be something
-# they don't intend to fix, so output the statement from Red Hat. 
+# they don't intend to fix, so output the statement from Red Hat.
 # Otherwise, consider resolved and output the link to the RHSA.
-# This of course assumes you ARE running the latest CentOS/RHEL release 
+# This of course assumes you ARE running the latest CentOS/RHEL release
 # versions of the software you're checking the CVEs for.
 #
 # No guarantees anything this outputs is correct or proper.
