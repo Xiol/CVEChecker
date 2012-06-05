@@ -35,6 +35,7 @@ from BeautifulSoup import BeautifulSoup
 class CVEChecker:
     def __init__(self):
         self.cve_base_url = "https://www.redhat.com/security/data/cve/"
+        self.mitre_url = "http://cve.mitre.org/cgi-bin/cvename.cgi?name="
         self.rhel_version = "5"
         self.rhsa_r = re.compile(".*Red Hat Enterprise Linux version {0}.*".format(self.rhel_version))
         self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
@@ -89,7 +90,7 @@ class CVEChecker:
         except urllib2.HTTPError:
             # 404 or general screwup, don't cache in case it turns up later
             return {'cve': "{0} -- !!FIX!! Not found on Red Hat's website. " \
-                                  + "Google it, might be Windows only or bad CVE reference.".format(cve), 'verinfo': None}
+                                  + "Might be Windows only or bad CVE reference, see {1}".format(cve, self.mitre_url + cve), 'verinfo': None}
         except urllib2.URLError:
             return {'cve': "There was a problem with the URL.", 'verinfo': None}
 
@@ -137,7 +138,7 @@ class CVEChecker:
         elif soup.find(text="CVE not found"):
             # They changed their website! This is needed to pick up the lack of a CVE now,
             # since they don't 404 on a missing CVE, they redirect to a page that returns 200 OK. Boo.
-            result = "!!FIX!! Not found on Red Hat's website. Google it, might be Windows only or bad CVE reference."
+            result = "!!FIX!! Not found on Red Hat's website. Might be Windows only or bad CVE reference, see {0}".format(self.mitre_url + cve)
             return {'cve': cve + " -- " + result, 'verinfo': None}
 
         else:
