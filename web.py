@@ -29,10 +29,10 @@ fixemph = re.compile('!!FIX!!')
 class RHSAGenWeb:
     @cherrypy.expose
     def index(self):
-        return tlu.get_template("index.html").render(rhelver="5")
+        return tlu.get_template("index.html").render()
 
     @cherrypy.expose
-    def repgen(self, cves=None, platform="x86_64", host=None):
+    def repgen(self, cves=None, platform="x86_64", rhelver="5", host=None):
         scrubber.scrub(cves)
 
         if cves == None or cves == "":
@@ -44,15 +44,19 @@ class RHSAGenWeb:
         if host == "":
             host = None
 
-        checker = rhsac.CVEChecker()
+        if rhelver not in ["5","6"]:
+            return "Somehow you managed to give me an incorrect RHEL version. :("
+
+        checker = rhsac.CVEChecker(rhel_version=rhelver, platform=platform, host=host)
 
         rhsalist = []
 
         cves = cves.replace(',',' ')
         cves = cves.split()
+        cves.sort()
 
         for cve in cves:
-            item = checker.get_cve_info(cve, platform, host)
+            item = checker.get_cve_info(cve)
             item['cve'] = scrubber.scrub(item['cve'])
             item['cve'] = fixemph.sub('<b class="emph">!!FIX!!</b>', item['cve'])
             rhsalist.append(item)

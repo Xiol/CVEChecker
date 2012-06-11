@@ -12,14 +12,18 @@
         <h1>CVE -&gt; RHSA Report Generator</h1>
 
         <p>Enter a whitespace seperated list of CVEs in the form of CVE-YYYY-XXXX:</p>
-        <p>Currently this only supports RHSA lookups for RHEL ${rhelver}.</p>
         <p>This can take a few moments to process as there is a slight delay between requests to the Red Hat website.</p>
         <p><span class="emph">This page runs directly from the development code, including whatever branch I have checked out of the repo.</span><br />It may be broken or it may not return correct results - please check everything carefully before sending to the client!</p>
         <p><span class="emph">Beta</span> -- SNMP Host: The host which to scan for installed packages. This will not work for any host other than localhost and 94.229.165.60 at the moment.</p>
 
         <form action="repgen" method="post">
+            <table><tr><td>
             <input type="radio" name="platform" value="x86_64" checked/>x86_64<br />
             <input type="radio" name="platform" value="i386" />i386<br />
+            </td><td style="padding-left: 15px;">
+            <input type="radio" name="rhelver" value="5" checked/>RHEL 5<br />
+            <input type="radio" name="rhelver" value="6" />RHEL 6<br />
+            </td></tr></table>
             <p><input type="text" name="host" value="" /> SNMP Host -- <span class="emph">Beta!</span></p>
             <textarea name="cves" cols="20" rows="25"></textarea>
             <br />
