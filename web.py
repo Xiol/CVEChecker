@@ -48,6 +48,7 @@ class RHSAGenWeb:
 
         rhsalist = []
 
+        cves = cves.replace(',',' ')
         cves = cves.split()
 
         for cve in cves:

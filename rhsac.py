@@ -72,8 +72,9 @@ class CVEChecker:
         if host:
             self.snmpq = snmp.SNMPQueryTool(host)
 
+        # Fix formatting
         cve = cve.strip()
-
+        cve = cve.replace(',','')
         cve = cve.upper()
 
         if not self.cve_r.match(cve):
