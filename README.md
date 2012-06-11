@@ -23,4 +23,14 @@ Additionally, for the optional web interface:
 * Scrubber
 * CherryPy
 
-Currently working on SNMP integration to query remote servers for version information using SNMPv1 (...yeah, I know). 
+Todo
+----
+
+(Not in order)
+
+* Upgrade to BeautifulSoup4
+* Make it more Python3 friendly
+* Threading!
+* Save a report for later retrieval (the trendy part of me wants to use NoSQL for this...)
+* Better looking web interface
+* Unit tests
