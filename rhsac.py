@@ -114,9 +114,13 @@ class CVEChecker:
             if soup.find(text=self.rhsa6_r):
                 return self.scrape_rhsa(soup, self.rhsa6_r)
             elif soup.find(text=self.rhsa5_r):
-                return {'cve': self.cve + " -- Affected RHEL5, not RHEL6. Packages from RHEL6 will not be affected by this issue.", 'verinfo': None}
+                result = "Affected RHEL5, not RHEL6. Packages from RHEL6 will not be affected by this issue."
+                self._cache_store(result)
+                return {'cve': self.cve + " -- " + result, 'verinfo': None}
             elif soup.find(text=self.rhsax_r):
-                return {'cve': self.cve + " -- Affected <=RHEL4. Packages from RHEL6 will not be affected by this issue.", 'verinfo': None}
+                result = "Affected <=RHEL4. Packages from RHEL6 will not be affected by this issue."
+                self._cache_store(result)
+                return {'cve': self.cve + " -- " + result, 'verinfo': None}
         else:
             if soup.find(text=self.rhsa5_r):
                 return self.scrape_rhsa(soup, self.rhsa5_r)
