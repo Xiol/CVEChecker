@@ -2,20 +2,27 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
     <head>
-        <title>CVE -&gt; RHSA Report Generator</title>
+        <title>CVE Checker</title>
         <link rel="stylesheet" type="text/css" href="static/style.css" />
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <link rel="shortcut icon" href="static/favicon.png"/>
     </head>
 
     <body>
-        <h1>CVE -&gt; RHSA Report Generator</h1>
-
+        <div id="header">
+            <h1>CVE Checker</h1>
+        </div>
+        <div id="container">
+        <div id="right">
         <p>Enter a whitespace seperated list of CVEs in the form of CVE-YYYY-XXXX:</p>
         <p>This can take a few moments to process as there is a slight delay between requests to the Red Hat website.</p>
-        <p><span class="emph">This page runs directly from the development code, including whatever branch I have checked out of the repo.</span><br />It may be broken or it may not return correct results - please check everything carefully before sending to the client!</p>
-        <p><span class="emph">Beta</span> -- SNMP Host: The host which to scan for installed packages. This will not work for any host other than localhost and 94.229.165.60 at the moment.</p>
-
+        <p><span class="emph">This page runs directly from the development code, including whatever branch I have checked out of the repo.</span></p>
+        <p>It may be broken or it may not return correct results - please check everything carefully before sending to the client!</p>
+        % if snmp:
+            <p><span class="emph">Beta</span> -- SNMP Host: The host which to scan for installed packages. This will not work for any host other than localhost and 94.229.165.60 at the moment.</p>
+        % endif
+    </div>
+    <div id="left">
         <form action="repgen" method="post">
             <table><tr><td>
             <input type="radio" name="platform" value="x86_64" checked/>x86_64<br />
@@ -23,11 +30,25 @@
             </td><td style="padding-left: 15px;">
             <input type="radio" name="rhelver" value="5" checked/>RHEL 5<br />
             <input type="radio" name="rhelver" value="6" />RHEL 6<br />
-            </td></tr></table>
-            <p><input type="text" name="host" value="" /> SNMP Host -- <span class="emph">Beta!</span></p>
+</td></tr></table>
+            % if snmp:
+                <p class="nb">SNMP Host -- <span class="emph">Beta!</span></p>
+                <p><input type="text" name="host" value="" /></p>
+            % endif
             <textarea name="cves" cols="20" rows="25"></textarea>
             <br />
-            <input type="submit" value="Submit" />
+            <input class="subb" type="submit" value="Submit" />
         </form>
+</div></div>
+
+<div id="footer">
+    <p>| 
+    % if snmp: 
+        <a href="http://cve.xiol.co.uk/beta">Disable SNMP</a>
+    % else:
+        <a href="http://cve.xiol.co.uk/beta/?snmp=true">Enable SNMP</a>
+    % endif 
+        | <a href="http://cve.xiol.co.uk/beta/cachedump">Dump Cache</a> | <a href="mailto:cve@xiol.co.uk">Bugs?</a> |</p>
+</div>
     </body>
 </html>

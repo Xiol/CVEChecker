@@ -1,6 +1,66 @@
+/* * { border: 1px solid red; } */
+
+
 body { 
-    font-family: "Verdana", sans-serif; 
-    font-size: 80%;
+    font-family: sans-serif; 
+    font-size: 0.9em;
+    background-color: #e3e3e3;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    height: 100%;
+}
+
+h1 {
+    color: #000;
+    text-align: center;
+}
+
+p.nb {
+    margin-bottom: -17px;
+}
+
+#header {
+}
+
+#container {
+    width: 70%;
+    margin: 0 auto;
+}
+
+#left {
+    width: 49%;
+    float: left;
+    text-align: center;
+    margin: 0 auto;
+}
+
+#left table {
+    margin: 0 auto;
+}
+
+#left table td {
+    text-align: left;
+}
+
+#right {
+    width: 49%;
+    padding-right: 1%;
+    float: right;
+    margin-top: -8px;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0px;
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+    height: 35px;
+}
+
+#footer p {
+    font-family: monospace;
 }
 
 span.mono { 
@@ -11,4 +71,9 @@ span.mono {
 .emph {
     font-style: bold;
     color: #e42217;
+}
+
+input.subb {
+    text-align: centre;
+    margin: 0 auto;
 }

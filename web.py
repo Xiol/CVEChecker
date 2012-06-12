@@ -28,8 +28,8 @@ fixemph = re.compile('!!FIX!!')
 
 class RHSAGenWeb:
     @cherrypy.expose
-    def index(self):
-        return tlu.get_template("index.html").render()
+    def index(self, snmp=False):
+        return tlu.get_template("index.html").render(snmp=snmp)
 
     @cherrypy.expose
     def repgen(self, cves=None, platform="x86_64", rhelver="5", host=None):
@@ -62,6 +62,10 @@ class RHSAGenWeb:
             rhsalist.append(item)
 
         return tlu.get_template("repgen.html").render(rhsalist=rhsalist)
+
+    @cherrypy.expose
+    def cachedump(self):
+        return "Not yet implemented :("
 
     @cherrypy.expose
     def default(self):
