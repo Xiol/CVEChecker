@@ -96,7 +96,7 @@ class CVEChecker:
                 if cached_cve['originalver']:
                     return {'cve': cached_cve['cve'], 'verinfo': self._get_installed_package(cached_cve['originalver'])}
             # Likely a statement, so no verinfo despite wanting us to check a host
-            return {'cve': cached_cve['cve'], 'verinfo': cached_cve['originalver']}
+            return {'cve': cached_cve['cve'], 'verinfo': None}
 
         cveurl = self.cve_base_url + self.cve + ".html"  # Not sure if we need .html anymore? They rewrite it anyway.
         try:
