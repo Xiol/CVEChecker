@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <title>Cache Dump</title>
+        <style type="text/css">
+        body { font-family: monospace; font-size: 9px; }
+        table {
+                border-width: 1px;
+                border-spacing: 1px;
+                border-style: solid;
+                border-color: black;
+                border-collapse: collapse;
+                background-color: white;
+        }
+        table th {
+                border-width: 1px;
+                padding: 2px;
+                border-style: solid;
+                border-color: black;
+                background-color: white;
+        }
+        table td {
+                border-width: 1px;
+                padding: 2px;
+                border-style: solid;
+                border-color: black;
+                background-color: white;
+        }
+        </style>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <th>ID</th><th>Date</th><th>Platform</th><th>RHEL</th><th>CVE</th><th>Result</th><th>FixedInVer</th>
+            </tr>
+            % for r in result:
+            <tr>
+                % for x in range(0,7):
+                    % if r[x] == None:
+                        <td>NULL</td>
+                    % else:
+                        <td>${r[x]}</td>
+                    %endif
+                % endfor
+            </tr>
+            % endfor
+        </table>
+    </body>
+</html>

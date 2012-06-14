@@ -11,6 +11,7 @@ import rhsac
 import cherrypy
 import os
 import re
+import sqlite3
 from mako.template import Template
 from mako.lookup import TemplateLookup
 from scrubber import Scrubber
@@ -65,7 +66,16 @@ class RHSAGenWeb:
 
     @cherrypy.expose
     def cachedump(self):
-        return "Not yet implemented :("
+        pathtodb = os.path.join(os.getcwd(), os.path.dirname(__file__), 'cache.db')
+        if not os.path.exists(pathtodb):
+            return "Cache is empty."
+        conn = sqlite3.connect(pathtodb, check_same_thread=False)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM cache")
+        result = cur.fetchall()
+        if result == None or result == "":
+            return "Cache is empty."
+        return tlu.get_template("cachedump.html").render(result=result)
 
     @cherrypy.expose
     def default(self):
