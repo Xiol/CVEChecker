@@ -50,7 +50,7 @@ class CVEChecker:
         self.rhsax_r = re.compile(".*Red Hat Enterprise Linux version [4321].*")
         self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
         self.pkghdr5 = "Red Hat Enterprise Linux (v. 5 server)"
-        self.pkghdr6 = "Red Hat Enterprise Linux (v. 6 server)"
+        self.pkghdr6 = "Red Hat Enterprise Linux Server (v. 6)"
         self.curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
         if self.host:
             self.snmpq = snmp.SNMPQueryTool(self.host)
