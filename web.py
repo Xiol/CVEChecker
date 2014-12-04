@@ -45,7 +45,7 @@ class RHSAGenWeb:
         if host == "":
             host = None
 
-        if rhelver not in ["5","6"]:
+        if rhelver not in ["5","6","7"]:
             return "Somehow you managed to give me an incorrect RHEL version. :("
 
         checker = rhsac.CVEChecker(rhel_version=rhelver, platform=platform, host=host)
@@ -58,7 +58,7 @@ class RHSAGenWeb:
 
         for cve in cves:
             item = checker.get_cve_info(cve)
-            item['cve'] = scrubber.scrub(item['cve'])
+            #item['cve'] = scrubber.scrub(item['cve'])
             item['cve'] = fixemph.sub('<b class="emph">!!FIX!!</b>', item['cve'])
             rhsalist.append(item)
 
@@ -82,4 +82,4 @@ class RHSAGenWeb:
         return "404"
 
 if __name__ == "__main__":
-    cherrypy.quickstart(RHSAGenWeb(), "/beta", "web.conf")
+    cherrypy.quickstart(RHSAGenWeb(), "/", "web.conf")

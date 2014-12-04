@@ -24,15 +24,15 @@
 # vim:ts=4:sw=4:sts=4:ai:si:nu
 
 import sys
-if not sys.version_info[:2] <= (2, 6):
-    print "I require Python 2.6 or 2.7 to run."
+if not sys.version_info[:2] <= (2, 7):
+    print "I require Python 2.7 to run."
     sys.exit(1)
 
 import re
 import urllib2
 import sqlite3
 import os
-import snmp
+#import snmp
 from BeautifulSoup import BeautifulSoup
 
 
@@ -42,15 +42,18 @@ class CVEChecker:
             raise ValueError("Platform must be 'x86_64' or 'i386'.")
         self.rhel_version = rhel_version
         self.platform = platform
-        self.host = host
-        self.cve_base_url = "https://www.redhat.com/security/data/cve/"
+        self.host = None # workaround
+#        self.cve_base_url = "https://www.redhat.com/security/data/cve/"
+        self.cve_base_url = "https://access.redhat.com/security/cve/"
         self.mitre_url = "http://cve.mitre.org/cgi-bin/cvename.cgi?name="
         self.rhsa5_r = re.compile(".*Red Hat Enterprise Linux version 5.*")
         self.rhsa6_r = re.compile(".*Red Hat Enterprise Linux version 6.*")
+        self.rhsa7_r = re.compile(".*Red Hat Enterprise Linux version 7.*")
         self.rhsax_r = re.compile(".*Red Hat Enterprise Linux version [4321].*")
         self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
         self.pkghdr5 = "Red Hat Enterprise Linux (v. 5 server)"
-        self.pkghdr6 = "Red Hat Enterprise Linux (v. 6 server)"
+        self.pkghdr6 = "Red Hat Enterprise Linux Server (v. 6)"
+        self.pkghdr7 = "Red Hat Enterprise Linux Server (v. 7)"
         self.curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
         if self.host:
             self.snmpq = snmp.SNMPQueryTool(self.host)
@@ -98,7 +101,7 @@ class CVEChecker:
             # Likely a statement, so no verinfo despite wanting us to check a host
             return {'cve': cached_cve['cve'], 'verinfo': None}
 
-        cveurl = self.cve_base_url + self.cve + ".html"  # Not sure if we need .html anymore? They rewrite it anyway.
+        cveurl = self.cve_base_url + self.cve # + ".html"  # Not sure if we need .html anymore? They rewrite it anyway.
         try:
             html = urllib2.urlopen(cveurl).read()
         except urllib2.HTTPError:
@@ -110,11 +113,37 @@ class CVEChecker:
 
         soup = BeautifulSoup(html)
 
-        if self.rhel_version == "6":
+        # Not DRY at all, just hacking in 7 support. Need to rewrite this
+        # entire tool tbh.
+        if self.rhel_version == "7":
+            if soup.find(text=self.rhsa7_r):
+                return self.scrape_rhsa(soup, self.rhsa7_r)
+            elif soup.find(text=self.rhsa6_r):
+                result = "Related to, or fix only available for, RHEL6."
+                statement = self.get_statement(soup)
+                if statement:
+                    result = result + " Red Hat Statement: " + statement
+                    self._cache_store(result)
+                    return {'cve': self.cve + " -- " + result, 'verinfo': None}
+            elif soup.find(text=self.rhsa5_r):
+                result = "Related to, or fix only available for, RHEL5."
+                statement = self.get_statement(soup)
+                if statement:
+                    result = result + " Red Hat Statement: " + statement
+                self._cache_store(result)
+                return {'cve': self.cve + " -- " + result, 'verinfo': None}
+            elif soup.find(text=self.rhsax_r):
+                result = "Affected <=RHEL4. Packages from RHEL6 will not be affected by this issue."
+                self._cache_store(result)
+                return {'cve': self.cve + " -- " + result, 'verinfo': None}
+        elif self.rhel_version == "6":
             if soup.find(text=self.rhsa6_r):
                 return self.scrape_rhsa(soup, self.rhsa6_r)
             elif soup.find(text=self.rhsa5_r):
-                result = "Affected RHEL5, not RHEL6. Packages from RHEL6 will not be affected by this issue."
+                result = "Related to, or fix only available for, RHEL5."
+                statement = self.get_statement(soup)
+                if statement:
+                    result = result + " Red Hat Statement: " + statement
                 self._cache_store(result)
                 return {'cve': self.cve + " -- " + result, 'verinfo': None}
             elif soup.find(text=self.rhsax_r):
@@ -127,11 +156,11 @@ class CVEChecker:
 
         # If we get here, then there isn't a RHSA available.
 
-        if soup.find(text="Statement"):
+        statement = self.get_statement(soup)
+        if statement:
             # If we're here, Red Hat haven't released an updated package, but they
             # have made a statement about the issue, usually pointing out why they
             # haven't fixed it. We need to grab this for our report...
-            statement = ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
             result = "Red Hat Statement: \"{0}\" - {1}".format(statement, cveurl)
             self._cache_store(result)
             return {'cve': self.cve + " -- " + result, 'verinfo': None}
@@ -147,6 +176,12 @@ class CVEChecker:
             #_add_cve(cve, result)
             return {'cve': self.cve + " -- " + result, 'verinfo': None}
 
+    def get_statement(self, soup):
+        if soup.find(text="Statement"):
+            return ' '.join([text for text in soup.find(text="Statement").findNext('p').findAll(text=True)])
+        else:
+            return None
+
     def scrape_rhsa(self, soup, rx):
         # If we've found the above, we have an RHSA (in theory!)
         # Get the link to the RHSA page
@@ -160,8 +195,10 @@ class CVEChecker:
             pkghdr = self.pkghdr5
         elif self.rhel_version == "6":
             pkghdr = self.pkghdr6
+        elif self.rhel_version == "7":
+            pkghdr = self.pkghdr7
         else:
-           raise ValueError("RHEL version should be '5' or '6' only.")
+           raise ValueError("RHEL version should be '5', '6' or '7' only.")
         o_ver = rhsa_soup.find('a', attrs={"name": pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
 
         # Change the 'src' in the package name to our platform name
@@ -186,8 +223,9 @@ class CVEChecker:
         return {'cve': "{0} -- {1}".format(self.cve, result), 'verinfo': instver}
 
     def _get_installed_package(self, package):
-        p = package.split('src')[0][:-1]
-        return self.snmpq.get_installed_package(p)
+        return "" # workaround
+        #p = package.split('src')[0][:-1]
+        #return self.snmpq.get_installed_package(p)
 
     def _cache_retrieve(self):
         cur = self.conn.cursor()
@@ -228,22 +266,13 @@ if __name__ == '__main__':
         #print "No input detected. You need to pipe a whitespace separated list of CVEs in!"
         #print "e.g. `./rhsa.py < cvelist.txt`, or your preferred method."
         #sys.exit(1)
-        rawdata = """CVE-2007-3108 CVE-2007-4995 CVE-2007-5135 CVE-2008-5077 CVE-2009-0590 CVE-2009-0789 CVE-2009-1377 CVE-2009-1378 CVE-2009-1379 CVE-2009-1386 CVE-2009-3245 CVE-2009-3555 CVE-2010-0433 CVE-2010-4180 CVE-2010-4252 CVE-2011-1945
-        CVE-2007-0988
-        CVE-2006-4924
-        CVE-2006-4925
-        CVE-2006-5051
-        CVE-2008-1483
-        CVE-2008-3259
-        CVE-2008-5161
-        CVE-2001-0001
-        CVE-2004-9999"""
+        rawdata = "CVE-2014-7169"
     else:
         rawdata = sys.stdin.read()
 
     cves = rawdata.split()
 
-    checker = CVEChecker(host='localhost')
+    checker = CVEChecker(host='localhost', rhel_version="7")
 
     for cve in cves:
         info = checker.get_cve_info(cve)
