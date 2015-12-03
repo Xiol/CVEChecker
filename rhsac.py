@@ -50,6 +50,7 @@ class CVEChecker:
         self.rhsa6_r = re.compile(".*Red Hat Enterprise Linux version 6.*")
         self.rhsa7_r = re.compile(".*Red Hat Enterprise Linux version 7.*")
         self.rhsax_r = re.compile(".*Red Hat Enterprise Linux version [4321].*")
+        self.sc_r = re.compile(".*Red Hat Software Collections \d for RHEL.*")
         self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
         self.pkghdr5 = "Red Hat Enterprise Linux (v. 5 server)"
         self.pkghdr6 = "Red Hat Enterprise Linux Server (v. 6)"
@@ -190,6 +191,9 @@ class CVEChecker:
         # Open that page, read it in, hand it off to BS
         rhsa_soup = BeautifulSoup(urllib2.urlopen(rhsa).read())
 
+        if rhsa_soup.find(text=self.sc_r):
+            return {"cve": "{0} -- !!FIX!! This CVE is related to Red Hat Software Collections. If you are not using RHSC you might be fine. Please check manually: {1}".format(self.cve, rhsa), "verinfo": None}
+
         # Get the package version where the issue is fixed (SRPMS link)
         if self.rhel_version == "5":
             pkghdr = self.pkghdr5
@@ -266,13 +270,13 @@ if __name__ == '__main__':
         #print "No input detected. You need to pipe a whitespace separated list of CVEs in!"
         #print "e.g. `./rhsa.py < cvelist.txt`, or your preferred method."
         #sys.exit(1)
-        rawdata = "CVE-2014-7169"
+        rawdata = "CVE-2014-9427 CVE-2014-8142"
     else:
         rawdata = sys.stdin.read()
 
     cves = rawdata.split()
 
-    checker = CVEChecker(host='localhost', rhel_version="7")
+    checker = CVEChecker(host='localhost', rhel_version="6")
 
     for cve in cves:
         info = checker.get_cve_info(cve)
