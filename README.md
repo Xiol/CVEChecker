@@ -29,7 +29,6 @@ Todo
 (Not in order)
 
 * Upgrade to BeautifulSoup4
-* Make it more Python3 friendly
 * Threading!
 * Save a report for later retrieval (the trendy part of me wants to use NoSQL for this...)
 * Better looking web interface
