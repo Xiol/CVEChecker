@@ -24,10 +24,6 @@
 # vim:ts=4:sw=4:sts=4:ai:si:nu
 
 import sys
-if not sys.version_info[:2] <= (2, 7):
-    print "I require Python 2.7 to run."
-    sys.exit(1)
-
 import re
 import urllib2
 import sqlite3
@@ -267,8 +263,8 @@ if __name__ == '__main__':
     rawdata = ""
 
     if sys.stdin.isatty():
-        #print "No input detected. You need to pipe a whitespace separated list of CVEs in!"
-        #print "e.g. `./rhsa.py < cvelist.txt`, or your preferred method."
+        #print("No input detected. You need to pipe a whitespace separated list of CVEs in!")
+        #print("e.g. `./rhsa.py < cvelist.txt`, or your preferred method.")
         #sys.exit(1)
         rawdata = "CVE-2014-9427 CVE-2014-8142"
     else:
@@ -281,6 +277,6 @@ if __name__ == '__main__':
     for cve in cves:
         info = checker.get_cve_info(cve)
         if info['verinfo'] is not None:
-            print "{0} -- Currently installed package: {1}".format(info['cve'], info['verinfo'])
+            print("{0} -- Currently installed package: {1}".format(info['cve'], info['verinfo']))
         else:
-            print info['cve']
+            print(info['cve'])
