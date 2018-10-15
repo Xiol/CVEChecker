@@ -112,7 +112,7 @@ class SNMPQueryTool:
 
     def _debug(self, msg):
         if self.debug:
-            print msg
+            print(msg)
 
 if __name__ == "__main__":
     q = SNMPQueryTool('localhost')
