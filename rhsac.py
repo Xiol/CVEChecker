@@ -51,7 +51,7 @@ class CVEChecker:
         self.rhsa7_r = re.compile(".*Red Hat Enterprise Linux version 7.*")
         self.rhsax_r = re.compile(".*Red Hat Enterprise Linux version [4321].*")
         self.sc_r = re.compile(".*Red Hat Software Collections \d for RHEL.*")
-        self.cve_r = re.compile(r"^CVE-\d{4}-\d{4}$")
+        self.cve_r = re.compile(r"^CVE-\d{4}-\d{4,5}$")
         self.pkghdr5 = "Red Hat Enterprise Linux (v. 5 server)"
         self.pkghdr6 = "Red Hat Enterprise Linux Server (v. 6)"
         self.pkghdr7 = "Red Hat Enterprise Linux Server (v. 7)"
@@ -109,8 +109,8 @@ class CVEChecker:
             # 404 or general screwup, don't cache in case it turns up later
             return {'cve': "{0} -- !!FIX!! Not found on Red Hat's website. " \
                                   + "Might be Windows only or bad CVE reference, see {1}".format(self.cve, self.mitre_url + self.cve), 'verinfo': None}
-        except urllib2.URLError:
-            return {'cve': "There was a problem with the URL.", 'verinfo': None}
+        except urllib2.URLError as e:
+            return {'cve': "{0} -- !!FIX!! There was a problem with the URL. {1}".format(self.cve, e.reason), 'verinfo': None}
 
         soup = BeautifulSoup(html)
 
@@ -203,8 +203,10 @@ class CVEChecker:
             pkghdr = self.pkghdr7
         else:
            raise ValueError("RHEL version should be '5', '6' or '7' only.")
-        o_ver = rhsa_soup.find('a', attrs={"name": pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
-
+        try:
+            o_ver = rhsa_soup.find('a', attrs={"name": pkghdr}).findNext(text="SRPMS:").findNext('td').contents[0]
+        except:
+            return {"cve": "{0} -- !!FIX!! Exception raised when trying to determine package header. Please check manually: {1}".format(self.cve, rhsa), "verinfo": None}
         # Change the 'src' in the package name to our platform name
         # This is being very lazy, but it works - the versions are the same
         # for i386 and x86_64, so we can get away with this for now.
